@@ -13,7 +13,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='docker-registry-cleaner',
 
-    version='0.1.0',
+    version='0.1.1',
 
     description='A tool to remove unused images from a Docker registry',
     long_description=long_description,

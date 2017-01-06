@@ -1,3 +1,4 @@
 *.pyc
 env/
 cleaner/credentials.py
+.cache/

@@ -1,4 +1,6 @@
+from __future__ import absolute_import
 import os
+from cleaner.tag import Tag
 
 
 class DockerProject(object):
@@ -14,7 +16,7 @@ class DockerProject(object):
             self._tagfiles = filter(lambda tf: tf.startswith('tag_'),
                                     os.listdir(self.path))
         return self._tagfiles
-            
+
     @property
     def environments(self):
         if not hasattr(self, '_envs'):
@@ -34,7 +36,8 @@ class DockerProject(object):
         return self._flattags
 
     def tags(self, environment):
-        ekey = lambda t: t.environment
+        def ekey(t):
+            return t.environment
         if not hasattr(self, '_tags'):
             result = {}
             sorted_tags = sorted(self.flat_tags, key=ekey)
@@ -47,7 +50,6 @@ class DockerProject(object):
     def old_deploy_tags(self, cutoff):
         """cutoff: unix time for oldest allowable tag"""
         old = []
-        tags_dict = self.flat_tags
 
         for env in self.environments:
             if env == 'Hash':
@@ -57,12 +59,12 @@ class DockerProject(object):
             # always keep the 10 latest tags for an environment
             possible_discard = env_tags[10:]
             too_old = next((x for x in possible_discard
-                           if x.mtime < cutoff), None)
+                            if x.mtime < cutoff), None)
             if too_old is not None:
                 idx = possible_discard.index(too_old)
                 old.extend(possible_discard[idx:])
         return old
-            
+
     def old_hash_tags(self, cutoff, deploy_tags_to_remove):
         """cutoff: unix time for oldest allowable tag"""
 
@@ -74,7 +76,7 @@ class DockerProject(object):
         whitelist = ['latest']
 
         # Filter tags that are too old and not whitelisted
-        old = [t for t in ts 
+        old = [t for t in ts
                if t.mtime < cutoff and t.tag not in whitelist]
 
         old_and_unreferenced = []
@@ -82,10 +84,10 @@ class DockerProject(object):
             img = tag.image
 
             # the set of all tags with image == this tag's image except this
-            hash_tags_referencing_img = {t for t in self.flat_tags 
+            hash_tags_referencing_img = {t for t in self.flat_tags
                                          if t.image == img and t != tag} - set(deploy_tags_to_remove)
 
             if not any(hash_tags_referencing_img):
-                old_and_unreferenced.append(tag) 
+                old_and_unreferenced.append(tag)
 
         return old_and_unreferenced
